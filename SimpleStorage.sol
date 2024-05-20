@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.25; 
+pragma solidity 0.8.25;
 
 contract SimpleStorage {
-    // defalut uint value is zero
-    uint256 favorableNumber ;
+    // default uint value is zero
+    uint256 favorableNumber;
 
     uint256 public borthersFavorableNumber;
 
@@ -13,7 +13,7 @@ contract SimpleStorage {
     // 创建列表的方法是使用一组被称为数组(array)的数据结构
     // array 是存储列表，或者说存储一系列对象的一种方式
     // 创建一个数组的方法和初始化其他类型没有什么区别
-    
+
     // 此时这两个数组还是空列表
     // 这种类型的数组就是所谓的动态数组 (dynamic array) 因为在初始化这个数组的时候并没有规定他的大小
     // 没有设置大小，那就是任意大小，并且数组的大小会随着我们添加和减少而增加和减少
@@ -23,10 +23,10 @@ contract SimpleStorage {
     uint256[3] public fixedSizeFavorableNumbers;
 
     // 映射
-    mapping (string => uint256) public nameToFavorableNumber;
+    mapping(string => uint256) public nameToFavorableNumber;
 
     // 结构体
-    struct People{
+    struct People {
         uint256 favorableNumber;
         string name;
     }
@@ -34,7 +34,7 @@ contract SimpleStorage {
     // 函数或者方法指的是独立模块，在我们调用的时候会执行某些指令
 
     // 函数 通过关键字 function 来修饰
-    function store(uint256 _favorableNumber)public {
+    function store(uint256 _favorableNumber) public {
         favorableNumber = _favorableNumber;
         retrieve();
     }
@@ -43,13 +43,13 @@ contract SimpleStorage {
     //     testVar = 6;
     // }
 
-    function retrieve() public view returns(uint256){
+    function retrieve() public view returns (uint256){
         return favorableNumber;
     }
 
     function add() public pure returns (uint256){
-        return 1+1;
-    } 
+        return 1 + 1;
+    }
 
     // calldata、memory、storage
     // calldata 和 memory 意味着这个变量只是临时存在
@@ -67,16 +67,16 @@ contract SimpleStorage {
     // 因为数组、结构体、映射 在 Solidity中被认为是特殊的类型
     // 但是string的本质就是bytes数组，所以其也需要，但是 uint256 可以自动知道 uint256 的位置 => Solidity 知道对于这个函数
     // uint256 将仅仅存在于内存中，但是不确定 string 是什么
-    function addPerson(string memory _name,uint256 _favorableNumber) public {
+    function addPerson(string memory _name, uint256 _favorableNumber) public {
         // 这里的 push 的People 是大小的，其实就是结构体的名字
         // 而里面的参数，使用() 包括的，就是其有参构造方法
-        People memory newPeople = People({favorableNumber:_favorableNumber,name:_name});
+        People memory newPeople = People({favorableNumber: _favorableNumber, name: _name});
         // People memory newPeople2 = People(_favorableNumber,_name);
-        
+
         // peoples.push(People(_favorableNumber,_name));
         peoples.push(newPeople);
 
         nameToFavorableNumber[_name] = _favorableNumber;
-    } 
+    }
 
 } 
