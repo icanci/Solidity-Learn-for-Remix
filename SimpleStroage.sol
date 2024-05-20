@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.25; 
 
-contract SimpleStroage {
+contract SimpleStorage {
     // defalut uint value is zero
     uint256 favorableNumber ;
 
