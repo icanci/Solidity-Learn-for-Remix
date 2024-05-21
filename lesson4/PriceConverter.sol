@@ -21,7 +21,6 @@ library PriceConverter {
         return uint256(price * 1e10); // 1 ** 10000000000
     }
 
-
     function getVersion() internal view returns (uint256) {
         return AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306).version();
     }

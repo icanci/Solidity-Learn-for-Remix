@@ -3,6 +3,12 @@ pragma solidity ^0.8.0;
 
 import "./PriceConverter.sol";
 
+// 优化之前
+// 创建此合约需要的 gas：840761
+// Immutable Constant(常量)
+// 使用 Constant 修饰 minimumUsd
+// 创建此合约需要的 gas：821214
+
 // FundMe 合约
 // 其是一个智能合约，可以使人们发起一个众筹
 // 人们可以向其发送ETH、Polygon、Fantom 或者是其他区块链原生通证
@@ -11,22 +17,26 @@ import "./PriceConverter.sol";
 // 这个合约可以从用户那里获取资金
 // 可以提取资金
 // 设置一个以 usd 计价的最小资助金额
+error NotOwner();
+
+
 contract FundMe {
     // 构造函数，会在你部署合约之后立即调用一次
     constructor() {
         // 这里的 sender 就是部署这个合约的人
-        owner = msg.sender;
+        i_owner = msg.sender;
     }
 
     using PriceConverter for uint256;
 
-    uint256 public minimumUsd = 50 * 1e18;
+    // 对于 Solidity 中只需要设置一次的变量 可以通过优化，来节省gas
+    uint256 public constant MINIMUM_USD = 50 * 1e18;
 
     address[] public funders;
 
     mapping(address => uint256) public  addressToAmountFunded;
 
-    address public owner;
+    address public immutable i_owner;
 
     // fund 函数，人们可以使用其来发送资金
     // paybale 关键字
@@ -49,7 +59,7 @@ contract FundMe {
         // 也就是使用去中心化的预言机网络，获取1个ETH的usd价格
 
         // getConversionRate 需要传入一个参数，但是msg.value
-        require(msg.value.getConversionRate() >= minimumUsd, "didn't send enough! ");
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "didn't send enough! ");
         // 记录下每个 funder
         // msg.sender 是一个全局关键字 表示是调用这个函数的地址 即 Account address
         funders.push(msg.sender);
@@ -81,14 +91,34 @@ contract FundMe {
         // call 是在 Solidity 中比较底层的命令。可以用来调用几乎所有的Solidity函数
         // 如果函数调用成功，那么就返回true 否则返回false
         // dataReturned 指的是 我们调用那个函数本身就返回一些数据或者说有返回值，那么就是此值
-        (bool callSuccess,bytes memory dataReturned) = payable(msg.sender).call{value: address(this).balance}("");
+        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
         require(callSuccess, "Call Failed!");
     }
 
     // 修饰器
     // 意思使用 onlyOwner 标记的函数，必须在调用之前，先调用一下 onlyOwner 里面的函数，再运行下划线的代码，下划线的代码表示剩余的代码
     modifier onlyOwner() {
-        require(msg.sender == owner, "Sender is not owner! ");
+        require(msg.sender == i_owner, "Sender is not owner! ");
+        if (msg.sender != i_owner) {
+            revert NotOwner();
+        }
         _;
+    }
+
+    // 如果有人在没t有调用fund函数就向这个合约发送以太币的情况下，怎么处理
+    // 特殊函数
+    // receive()
+    // fallback()
+
+    // 特殊函数，只要我们发送ETH或者向这个合约发送交易
+    // 只要没有与该交易相关的数据，这个函数就会被触发，类似vue中的钩子函数、生命周期函数
+    // 当你向合约发送交易的时候，如果没有指定某个函数。receive 函数就会被触发(当 calldata 没有值的时候)
+    receive() external payable {
+        fund();
+    }
+
+    // 即使数据和交易一起被发送，他也会触发
+    fallback() external payable {
+        fund();
     }
 }
