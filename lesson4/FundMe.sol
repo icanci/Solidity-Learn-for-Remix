@@ -12,7 +12,10 @@ import "./PriceConverter.sol";
 // 可以提取资金
 // 设置一个以 usd 计价的最小资助金额
 contract FundMe {
+    // 构造函数，会在你部署合约之后立即调用一次
     constructor() {
+        // 这里的 sender 就是部署这个合约的人
+        owner = msg.sender;
     }
 
     using PriceConverter for uint256;
@@ -22,6 +25,8 @@ contract FundMe {
     address[] public funders;
 
     mapping(address => uint256) public  addressToAmountFunded;
+
+    address public owner;
 
     // fund 函数，人们可以使用其来发送资金
     // paybale 关键字
@@ -53,7 +58,12 @@ contract FundMe {
 
     // 合约的拥有者可以提取不同的funder发生的资金
     // 因为我们要提取资金，所以需要把上面存储的数据设置为0
-    function withdraw() public {
+    // 此时，无论是谁都可以从这个合约提款；我们不希望所有人都可以提款
+    // 所以我们需要设定只有合约的拥有者才能调用 withdraw 函数
+    function withdraw() public onlyOwner {
+        // 当前的调用者和创建合约的，是否是一个人
+        // require(msg.sender == owner,"Sender is not owner! ");
+
         // for loop
         for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
             // code
@@ -68,16 +78,17 @@ contract FundMe {
         // 这里还是要做一个类型转换，把 msg.sender 从address类型转为 payable address 类型
 
         // msg.sender = address
-        // payable(msg.sender) = payable address
-        // 在 Solidity 中如果你想要发送以太币，你必须使用 payable address 类型才能做到
-        payable(msg.sender).transfer(address(this).balance); // 如果这一行失败，会直接回滚
-        // send
-        bool sendSuccess = payable(msg.sender).send(address(this).balance); // 这一行如果失败了，不会抛出异常，但是会返回一个布尔值
-        require(sendSuccess, "Send Failed!"); // 如果这一行失败，会直接回滚 send 需要手动回滚
         // call 是在 Solidity 中比较底层的命令。可以用来调用几乎所有的Solidity函数
         // 如果函数调用成功，那么就返回true 否则返回false
         // dataReturned 指的是 我们调用那个函数本身就返回一些数据或者说有返回值，那么就是此值
         (bool callSuccess,bytes memory dataReturned) = payable(msg.sender).call{value: address(this).balance}("");
         require(callSuccess, "Call Failed!");
+    }
+
+    // 修饰器
+    // 意思使用 onlyOwner 标记的函数，必须在调用之前，先调用一下 onlyOwner 里面的函数，再运行下划线的代码，下划线的代码表示剩余的代码
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Sender is not owner! ");
+        _;
     }
 }
