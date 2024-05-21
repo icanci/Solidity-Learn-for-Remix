@@ -64,6 +64,7 @@ contract FundMe {
         // msg.sender 是一个全局关键字 表示是调用这个函数的地址 即 Account address
         funders.push(msg.sender);
         addressToAmountFunded[msg.sender] += msg.value;
+        //
     }
 
     // 合约的拥有者可以提取不同的funder发生的资金
