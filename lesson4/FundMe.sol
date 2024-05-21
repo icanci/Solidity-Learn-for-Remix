@@ -62,7 +62,22 @@ contract FundMe {
         }
         // 重置数组 后面的 0 表示没有一个元素在里面，如果是1，则说明有1个元素在里面
         funders = new address[](0);
-        // 发送资金: 我们如何实际从这个合约中提取资金呢？
+        // 发送资金: 我们如何实际从这个合约中提取资金呢？或者说我们该如何把资金发送给合约的调用者
+        // 如何需要发送以太币或者其他区块链原生货币的话，有三种不同的方式可供使用
+        // transfer this 表示整个合约本身 .balance 就是当前这个地址的区块链原生货币或者以太坊余额了
+        // 这里还是要做一个类型转换，把 msg.sender 从address类型转为 payable address 类型
 
+        // msg.sender = address
+        // payable(msg.sender) = payable address
+        // 在 Solidity 中如果你想要发送以太币，你必须使用 payable address 类型才能做到
+        payable(msg.sender).transfer(address(this).balance); // 如果这一行失败，会直接回滚
+        // send
+        bool sendSuccess = payable(msg.sender).send(address(this).balance); // 这一行如果失败了，不会抛出异常，但是会返回一个布尔值
+        require(sendSuccess, "Send Failed!"); // 如果这一行失败，会直接回滚 send 需要手动回滚
+        // call 是在 Solidity 中比较底层的命令。可以用来调用几乎所有的Solidity函数
+        // 如果函数调用成功，那么就返回true 否则返回false
+        // dataReturned 指的是 我们调用那个函数本身就返回一些数据或者说有返回值，那么就是此值
+        (bool callSuccess,bytes memory dataReturned) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call Failed!");
     }
 }
