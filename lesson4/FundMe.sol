@@ -19,6 +19,10 @@ contract FundMe {
 
     uint256 public minimumUsd = 50 * 1e18;
 
+    address[] public funders;
+
+    mapping(address => uint256) public  addressToAmountFunded;
+
     // fund 函数，人们可以使用其来发送资金
     // paybale 关键字
     // 就像我们的钱包可以持有资金，合约地址也可以持有资金
@@ -39,13 +43,26 @@ contract FundMe {
         // 为了获取以太币的美元价格，我们需要从区块链之外获得信息
         // 也就是使用去中心化的预言机网络，获取1个ETH的usd价格
 
-        // getConversionRate 需要传入一个参数，但是msg.value会被认为是传入函数的第一个参数
+        // getConversionRate 需要传入一个参数，但是msg.value
         require(msg.value.getConversionRate() >= minimumUsd, "didn't send enough! ");
-        //
+        // 记录下每个 funder
+        // msg.sender 是一个全局关键字 表示是调用这个函数的地址 即 Account address
+        funders.push(msg.sender);
+        addressToAmountFunded[msg.sender] += msg.value;
     }
 
     // 合约的拥有者可以提取不同的funder发生的资金
-    //    function withdraw()  {
-    //
-    //    }
+    // 因为我们要提取资金，所以需要把上面存储的数据设置为0
+    function withdraw() public {
+        // for loop
+        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+            // code
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        // 重置数组 后面的 0 表示没有一个元素在里面，如果是1，则说明有1个元素在里面
+        funders = new address[](0);
+        // 发送资金: 我们如何实际从这个合约中提取资金呢？
+
+    }
 }
