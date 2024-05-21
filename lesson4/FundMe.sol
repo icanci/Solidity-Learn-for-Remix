@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+
 // FundMe 合约
 // 其是一个智能合约，可以使人们发起一个众筹
 // 人们可以向其发送ETH、Polygon、Fantom 或者是其他区块链原生通证
@@ -10,6 +12,13 @@ pragma solidity ^0.8.0;
 // 可以提取资金
 // 设置一个以 usd 计价的最小资助金额
 contract FundMe {
+    AggregatorV3Interface internal dataFeed;
+
+    constructor() {
+        dataFeed = AggregatorV3Interface(
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+    }
 
     uint256 public minimumUsd = 50;
 
@@ -32,6 +41,19 @@ contract FundMe {
         // 为了获取以太币的美元价格，我们需要从区块链之外获得信息
         // 也就是使用去中心化的预言机网络，获取1个ETH的usd价格
         require(msg.value >= minimumUsd, "didn't send enough! ");
+    }
+
+    function getPrice() public {
+        // abi
+        // address 0x694AA1769357215DE4FAC081bf1f309aDC325306
+    }
+
+    function getVersion() public view returns (uint256) {
+        return dataFeed.version();
+    }
+
+    function getConversionRate() public {
+
     }
 
     // 合约的拥有者可以提取不同的funder发生的资金
